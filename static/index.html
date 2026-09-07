@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="QUASAR">
+<meta name="theme-color" content="#080d14">
+<title>QUASAR — Quantified Universal Analytics, Signals & Reporting</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1>⬡ QUASAR</h1>
+      <span class="subtitle">Quantified Universal Analytics, Signals & Reporting</span>
+    </div>
+    <div class="header-right">
+      <span id="last-updated" class="status">Not connected</span>
+      <a href="#" id="argus-link" class="argus-link" target="_blank">Open ARGUS ↗</a>
+    </div>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" data-panel="overview">Overview</button>
+    <button class="nav-btn" data-panel="satellites">Satellites</button>
+    <button class="nav-btn" data-panel="aircraft">Aircraft</button>
+    <button class="nav-btn" data-panel="vessels">Vessels</button>
+    <button class="nav-btn" data-panel="anomalies">Anomalies <span id="anomaly-badge" class="badge hidden">0</span></button>
+    <button class="nav-btn" data-panel="reports">Reports</button>
+    <button class="nav-btn" data-panel="tasking">Tasking</button>
+    <button class="nav-btn" data-panel="incidents">Incidents</button>
+    <button class="nav-btn" data-panel="timeline">Timeline</button>
+    <button class="nav-btn" data-panel="watchlists">Watchlists</button>
+    <button class="nav-btn" data-panel="replay">Replay</button>
+    <button class="nav-btn" data-panel="config">Config</button>
+  </nav>
+
+  <section id="panel-overview" class="panel active">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="stat-sats">-</div><div class="stat-label">Satellites tracked</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-aircraft">-</div><div class="stat-label">Aircraft visible</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-vessels">-</div><div class="stat-label">Vessels tracked</div></div>
+      <div class="stat-card alert" id="stat-anomaly-card"><div class="stat-value" id="stat-anomalies">-</div><div class="stat-label">Unack'd anomalies</div></div>
+    </div>
+    <div id="map"></div>
+    <div class="panel-section"><h3>Latest anomalies</h3><div id="overview-anomalies"></div></div>
+  </section>
+
+  <section id="panel-satellites" class="panel">
+    <div class="panel-section"><h3>Currently tracked satellites</h3><div id="sat-list"></div></div>
+    <div class="panel-section"><h3>Satellite history</h3><div class="row"><label>Name <input id="sat-history-name" placeholder="ISS"></label><label>Hours <input id="sat-history-hours" type="number" value="24" style="max-width:80px"></label><button id="sat-history-btn">Query</button></div><div id="sat-history-results"></div></div>
+  </section>
+
+  <section id="panel-aircraft" class="panel">
+    <div class="panel-section"><h3>Aircraft in current picture</h3><div id="aircraft-list"></div></div>
+    <div class="panel-section"><h3>Aircraft history</h3><div class="row"><label>Callsign <input id="ac-callsign" placeholder="UAL123"></label><label>Hours <input id="ac-hours" type="number" value="24" style="max-width:80px"></label><button id="ac-history-btn">Query</button></div><div id="ac-history-results"></div></div>
+  </section>
+
+  <section id="panel-vessels" class="panel">
+    <div class="panel-section"><h3>Vessels in current picture</h3><div id="vessel-list"></div></div>
+    <div class="panel-section"><h3>Vessel history</h3><div class="row"><label>MMSI <input id="vessel-mmsi" placeholder="366053209"></label><label>Hours <input id="vessel-hours" type="number" value="24" style="max-width:80px"></label><button id="vessel-history-btn">Query</button></div><div id="vessel-history-results"></div></div>
+  </section>
+
+  <section id="panel-anomalies" class="panel"><div class="panel-section"><div class="row"><h3>Active anomalies</h3><button id="refresh-anomalies-btn">Refresh</button></div><div id="anomaly-list"></div></div></section>
+
+  <section id="panel-reports" class="panel">
+    <div class="panel-section"><div class="row"><label>Period (hours) <input id="report-hours" type="number" value="24" style="max-width:80px"></label><button id="generate-report-btn">Generate Report</button></div><pre id="report-output" class="report-text"></pre></div>
+    <div class="panel-section"><h3>Saved reports</h3><div id="report-list"></div></div>
+  </section>
+
+  <section id="panel-tasking" class="panel">
+    <div class="panel-section"><h3>Task ARGUS</h3><p class="hint">Send instructions to ARGUS from here — QUASAR acts as the command layer.</p><div class="row"><label>Satellite name <input id="task-sat-name" placeholder="ISS (ZARYA)"></label><label>Group <input id="task-sat-group" value="active"></label><button id="task-track-btn">Add to ARGUS auto-track</button><button id="task-watch-btn">Add to ARGUS alert watchlist</button></div><div id="task-result" class="status"></div></div>
+    <div class="panel-section"><h3>Pass prediction via ARGUS</h3><div class="row"><label>Satellite <input id="pass-sat-name" placeholder="NOAA 19"></label><label>Hours ahead <input id="pass-hours" type="number" value="24" style="max-width:80px"></label><button id="pass-query-btn">Get Passes</button></div><div id="pass-results"></div></div>
+    <div class="panel-section"><h3>Conjunction check via ARGUS</h3><div class="row"><label>Satellite <input id="conj-sat-name" placeholder="ISS (ZARYA)"></label><label>Threshold (km) <input id="conj-threshold" type="number" value="25" style="max-width:80px"></label><button id="conj-query-btn">Check Conjunctions</button></div><div id="conj-results"></div></div>
+  </section>
+
+  <section id="panel-incidents" class="panel"><div class="panel-section"><div class="row"><h3>Incident lifecycle</h3><button id="refresh-incidents-btn">Refresh</button></div><div id="incident-list"></div></div></section>
+  <section id="panel-timeline" class="panel"><div class="panel-section"><div class="row"><label>Hours <input id="timeline-hours" type="number" value="24" style="max-width:80px"></label><button id="timeline-btn">Load correlation timeline</button></div><div id="timeline-list"></div></div></section>
+  <section id="panel-watchlists" class="panel"><div class="panel-section"><h3>Priority watchlists</h3><div class="row"><label>Domain <select id="watch-domain"><option>aircraft</option><option>vessel</option><option>satellite</option></select></label><label>Value <input id="watch-value" placeholder="ICAO / MMSI / satellite"></label><label>Label <input id="watch-label" placeholder="Priority target"></label><button id="watch-add-btn">Add</button></div><div id="watch-list"></div></div></section>
+  <section id="panel-replay" class="panel"><div class="panel-section"><h3>Historical replay</h3><div class="row"><label>Hours <input id="replay-hours" type="number" value="1" style="max-width:80px"></label><button id="replay-btn">Replay through current rules</button></div><pre id="replay-output" class="report-text"></pre></div></section>
+
+  <section id="panel-config" class="panel">
+    <div class="panel-section"><h3>QUASAR configuration</h3><div class="row"><label>ARGUS URL <input id="cfg-argus-url" placeholder="http://localhost:8000" style="min-width:220px"></label></div><div class="row"><label>Tracked satellites (one per line)<textarea id="cfg-satellites" rows="6" placeholder="ISS (ZARYA)&#10;NOAA 19&#10;NOAA 18"></textarea></label></div><div class="row"><label>Station ID <input id="cfg-station-id" value="default"></label><label>Collection interval (s) <input id="cfg-interval" type="number" value="30" style="max-width:100px"></label></div><button id="save-config-btn">Save Configuration</button><div id="config-status" class="status"></div></div>
+    <div class="panel-section"><h3>Database statistics</h3><div id="db-stats"></div></div>
+  </section>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
